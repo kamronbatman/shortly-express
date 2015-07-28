@@ -47,13 +47,12 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 
-
-app.get('/', util.checkUser,
+app.get('/', User.checkUser,
 function(req, res) {
   res.render('index');
 });
 
-app.get('/create', util.checkUser,
+app.get('/create', User.checkUser,
   function(req, res) {
     res.render('index');
 });
@@ -105,7 +104,7 @@ app.get('/login', function(req, res){
   res.render('login');
 });
 
-app.post('/login', util.checkUser, function(req, res){
+app.post('/login', User.checkUser, function(req, res){
   res.redirect('/');
 });
 
@@ -114,6 +113,14 @@ app.get('/signup', function(req, res) {
 });
 
 app.post('/signup', function(req, res, next){
+  var username = req.body.username;
+  var password = req.body.password;
+
+  // User.fetchUser({ username: username })
+  // .tap(function(user){
+
+  // })
+
   if (req.body.username && req.body.password) {
     util.genHash(req.body.password).then( function(hash){
       new User({username: req.body.username, password_hash: hash})
@@ -127,7 +134,7 @@ app.post('/signup', function(req, res, next){
   } else {
     res.redirect('/signup');
   }
-}, util.checkUser, function(req, res){
+}, User.checkUser, function(req, res){
   res.redirect('/');
 });
 
@@ -135,7 +142,7 @@ app.post('/logout', function(req, res){
   console.log('Logging you out!');
   req.session.destroy();
   res.redirect('/login');
-})
+});
 
 /************************************************************/
 // Handle the wildcard route last - if all other routes fail

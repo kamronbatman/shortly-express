@@ -10,14 +10,34 @@ var User = db.Model.extend({
     return this.hasMany(Link);
   }
 }, {
-  //Only checks, username/password
-  //Returns a promise
-  isLoggedIn: Promise.method(function(username, password) {
-    return new this({ username: username }).fetch({ require: true })
-    .tap(function(user) {
-      return util.comparePassword(password, user.get('password_hash'));
-    });
-  })
+  fetchUser: function(username){
+    return new this({ username: username}).fetch({ require: true });
+  },
+
+  checkUser: function(req, res, next) {
+    var username = req.body.username || (req.session && req.session.user);
+    var password = req.body.password;
+
+    User.fetchUser(username)
+    .then(function(user){
+      username = user.get('username'); //Prevents injection
+      return util.comparePassword(password || '0', user.get('password_hash'))
+    })
+    .then(function(valid){
+      if (valid || req.session.user === username){
+        req.session.regenerate(function(){
+          req.session.user = username;
+          next();
+        });
+      } else {
+        res.redirect('/login');
+      }
+    })
+    .catch(function(error){
+      console.log('Error!', error);
+      res.redirect('/login');
+    })
+  }
 });
 
 module.exports = User;
