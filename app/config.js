@@ -24,7 +24,7 @@ db.knex.schema.hasTable('urls').then(function(exists) {
       link.integer('visits');
       link.timestamps();
     }).then(function (table) {
-      console.log('Created Table', table);
+      console.log('Created URLs Table');
     });
   }
 });
@@ -36,7 +36,7 @@ db.knex.schema.hasTable('clicks').then(function(exists) {
       click.integer('link_id');
       click.timestamps();
     }).then(function (table) {
-      console.log('Created Table', table);
+      console.log('Created Clicks Table');
     });
   }
 });
@@ -45,5 +45,30 @@ db.knex.schema.hasTable('clicks').then(function(exists) {
 // Add additional schema definitions below
 /************************************************************/
 
+db.knex.schema.hasTable('users').then(function(exists) {
+  if (!exists) {
+    db.knex.schema.createTable('users', function (user) {
+      user.increments('id').primary();
+      user.string('username', 255);
+      user.string('password_hash', 255);
+      user.string('email', 255);
+      user.timestamps();
+    }).then(function (table) {
+      console.log('Created User Table');
+    })
+  }
+});
+
+db.knex.schema.hasTable('sessions').then(function(exists){
+  if (!exists) {
+    db.knex.schema.createTable('sessions', function (session) {
+      session.string('sessionid').primary();
+      session.integer('user_id');
+      session.timestamps();
+    }).then(function (table) {
+      console.log('Created Sessions Table');
+    })
+  }
+})
 
 module.exports = db;

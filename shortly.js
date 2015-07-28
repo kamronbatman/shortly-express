@@ -1,7 +1,9 @@
 var express = require('express');
+var Promise = require('bluebird');
 var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
+var session = require('express-session');
 
 
 var db = require('./app/config');
@@ -10,8 +12,15 @@ var User = require('./app/models/user');
 var Links = require('./app/collections/links');
 var Link = require('./app/models/link');
 var Click = require('./app/models/click');
+var Session = require('./app/models/sessions');
 
 var app = express();
+
+app.use(session({
+  secret: 'MKS20-shortly-express',
+  resave: false,
+  saveUninitialized: true
+}));
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
@@ -23,24 +32,24 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 
 
-app.get('/', 
+app.get('/', util.checkUser,
 function(req, res) {
   res.render('index');
 });
 
-app.get('/create', 
+app.get('/create', util.checkUser,
 function(req, res) {
   res.render('index');
 });
 
-app.get('/links', 
+app.get('/links', util.checkUser,
 function(req, res) {
   Links.reset().fetch().then(function(links) {
     res.send(200, links.models);
   });
 });
 
-app.post('/links', 
+app.post('/links',
 function(req, res) {
   var uri = req.body.url;
 
@@ -78,8 +87,13 @@ function(req, res) {
 // Write your authentication routes here
 /************************************************************/
 
+app.get('/login', function(req, res){
+  res.render('login');
+});
 
-
+app.post('/login', util.checkUser, function(req, res){
+  res.redirect('/links');
+});
 /************************************************************/
 // Handle the wildcard route last - if all other routes fail
 // assume the route is a short code and try and handle it here.
