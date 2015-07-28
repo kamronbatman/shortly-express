@@ -1,7 +1,6 @@
 var db = require('../config');
 var Promise = require('bluebird');
 var Link = require('./link');
-var Session = require('./sessions');
 var util = require('../../lib/utility');
 
 var User = db.Model.extend({

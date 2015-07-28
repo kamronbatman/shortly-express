@@ -5,7 +5,7 @@ var db = Bookshelf.initialize({
   client: 'sqlite3',
   connection: {
     host: '127.0.0.1',
-    user: 'your_database_user',
+    user: 'root',
     password: 'password',
     database: 'shortlydb',
     charset: 'utf8',
@@ -58,17 +58,5 @@ db.knex.schema.hasTable('users').then(function(exists) {
     })
   }
 });
-
-db.knex.schema.hasTable('sessions').then(function(exists){
-  if (!exists) {
-    db.knex.schema.createTable('sessions', function (session) {
-      session.string('sessionid').primary();
-      session.integer('user_id');
-      session.timestamps();
-    }).then(function (table) {
-      console.log('Created Sessions Table');
-    })
-  }
-})
 
 module.exports = db;
