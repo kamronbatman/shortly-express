@@ -41,10 +41,6 @@ db.knex.schema.hasTable('clicks').then(function(exists) {
   }
 });
 
-/************************************************************/
-// Add additional schema definitions below
-/************************************************************/
-
 db.knex.schema.hasTable('users').then(function(exists) {
   if (!exists) {
     db.knex.schema.createTable('users', function (user) {
@@ -52,6 +48,7 @@ db.knex.schema.hasTable('users').then(function(exists) {
       user.string('username', 255);
       user.string('password_hash', 255);
       user.string('email', 255);
+      user.string('githubid', 255);
       user.timestamps();
     }).then(function (table) {
       console.log('Created User Table');

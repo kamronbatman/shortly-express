@@ -13,6 +13,21 @@ var Links = require('./app/collections/links');
 var Link = require('./app/models/link');
 var Click = require('./app/models/click');
 
+var passport = require('passport');
+var LocalStrategy = require('passport-local').Strategy;
+var GitHubStrategy = require('passport-github2').Strategy;
+
+passport.use(new LocalStrategy(User.localAuthentication));
+passport.serializeUser(User.serializeUser);
+passport.deserializeUser(User.deserializeUser);
+
+passport.use(new GitHubStrategy({
+    clientID: "205732134b804550fd87",
+    clientSecret: "d331c0a6f6f4d34133970aa512886ec0dac755f2",
+    callbackURL: "http://127.0.0.1:4568/auth/github/callback",
+    passReqToCallback: true
+  }, User.githubAuthentication ));
+
 var SessionStore = require('express-sql-session')(session);
 
 var options = {
@@ -38,6 +53,11 @@ app.use(session({
   store: sessionStore
 }));
 
+app.use(passport.initialize());
+app.use(passport.session());
+
+
+
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 app.use(partials());
@@ -47,12 +67,12 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 
-app.get('/', User.checkUser,
-function(req, res) {
+app.get('/', util.hasSession,
+  function(req, res) {
   res.render('index');
 });
 
-app.get('/create', User.checkUser,
+app.get('/create', util.hasSession,
   function(req, res) {
     res.render('index');
 });
@@ -104,9 +124,23 @@ app.get('/login', function(req, res){
   res.render('login');
 });
 
-app.post('/login', User.checkUser, function(req, res){
-  res.redirect('/');
-});
+app.post('/login',
+  passport.authenticate('local', { failureRedirect: '/login' }),
+  function(req, res) { res.redirect('/'); }
+);
+
+app.get('/auth/github/link', passport.authenticate('github',
+  { scope: [ 'user:email' ] }), function(req, res){ res.status(200).end(); });
+
+app.get('/auth/github', passport.authenticate('github',
+  { scope: [ 'user:email' ] }));
+
+app.get('/auth/github/callback',
+  passport.authenticate('github', {
+    scope: [ 'user:email' ],
+    failureRedirect: '/login' }),
+  function(req, res) { res.redirect('/'); }
+);
 
 app.get('/signup', function(req, res) {
   res.render('signup');
@@ -134,7 +168,7 @@ app.post('/signup', function(req, res, next){
   } else {
     res.redirect('/signup');
   }
-}, User.checkUser, function(req, res){
+}, function(req, res){
   res.redirect('/');
 });
 
